@@ -17,38 +17,179 @@ class _ScanSessionsListPageState extends State<ScanSessionsListPage> {
   final _storage = ScanStorageService();
   List<ScanSession> _sessions = [];
 
+  @override
+  void initState() {
+    super.initState();
+    _load();
+  }
+
   Future<void> _load() async {
     final sessions = await _storage.getAllSessions();
     setState(() {
       _sessions = sessions;
+      // Sort by date descending (newest first)
+      _sessions.sort((a, b) => b.scanDate.compareTo(a.scanDate));
     });
   }
 
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final colorScheme = theme.colorScheme;
+
     return Scaffold(
-      appBar: AppBar(title: const Text('Scan Sessions')),
+      backgroundColor: colorScheme.surface,
+      appBar: AppBar(
+        centerTitle: true,
+        elevation: 0,
+        backgroundColor: colorScheme.surface,
+        title: const Text(
+          'Scan History',
+          style: TextStyle(fontWeight: FontWeight.bold, fontSize: 24),
+        ),
+      ),
       body: _sessions.isEmpty
-          ? const Center(child: Text('No scan sessions yet...!'))
-          : ListView.builder(
+          ? Center(
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  Icon(
+                    Icons.history_toggle_off,
+                    size: 80,
+                    color: colorScheme.outlineVariant,
+                  ),
+                  const SizedBox(height: 16),
+                  Text(
+                    'No scan sessions yet',
+                    style: TextStyle(
+                      fontSize: 18,
+                      fontWeight: FontWeight.w500,
+                      color: colorScheme.outline,
+                    ),
+                  ),
+                  const SizedBox(height: 8),
+                  Text(
+                    'Sessions will appear here after scanning',
+                    style: TextStyle(
+                      fontSize: 14,
+                      color: colorScheme.outline.withValues(alpha: 0.7),
+                    ),
+                  ),
+                ],
+              ),
+            )
+          : ListView.separated(
+              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
               itemCount: _sessions.length,
+              separatorBuilder: (context, index) => const SizedBox(height: 12),
               itemBuilder: (context, index) {
                 final session = _sessions[index];
-                return Card(
-                  margin: const EdgeInsets.symmetric(
-                    horizontal: 16,
-                    vertical: 6,
-                  ),
-                  child: ListTile(
-                    title: Text('Job No: ${session.jobNo}'),
-                    subtitle: Text(
-                      DateFormat('dd MM yyyy, HM:mm').format(session.scanDate),
-                    ),
-                    trailing: const Icon(Icons.chevron_right),
-                    onTap: () => Navigator.push(
+                final dateStr = DateFormat('MMM dd, yyyy').format(session.scanDate);
+                final timeStr = DateFormat('hh:mm a').format(session.scanDate);
+
+                return InkWell(
+                  onTap: () async {
+                    await Navigator.push(
                       context,
                       MaterialPageRoute(
                         builder: (_) => ScanDetailsPage(session: session),
+                      ),
+                    );
+                    _load(); // Refresh in case of changes
+                  },
+                  borderRadius: BorderRadius.circular(16),
+                  child: Container(
+                    decoration: BoxDecoration(
+                      color: colorScheme.surface,
+                      borderRadius: BorderRadius.circular(16),
+                      border: Border.all(
+                        color: colorScheme.outlineVariant.withValues(alpha: 0.5),
+                      ),
+                      boxShadow: [
+                        BoxShadow(
+                          color: Colors.black.withValues(alpha: 0.03),
+                          blurRadius: 8,
+                          offset: const Offset(0, 2),
+                        ),
+                      ],
+                    ),
+                    child: Padding(
+                      padding: const EdgeInsets.all(16),
+                      child: Row(
+                        children: [
+                          Container(
+                            width: 52,
+                            height: 52,
+                            decoration: BoxDecoration(
+                              color: colorScheme.primaryContainer.withValues(alpha: 0.4),
+                              borderRadius: BorderRadius.circular(12),
+                            ),
+                            child: Icon(
+                              Icons.inventory_2_outlined,
+                              color: colorScheme.primary,
+                            ),
+                          ),
+                          const SizedBox(width: 16),
+                          Expanded(
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Text(
+                                  session.jobNo.isEmpty ? 'Untitled Job' : session.jobNo,
+                                  style: const TextStyle(
+                                    fontWeight: FontWeight.bold,
+                                    fontSize: 16,
+                                  ),
+                                ),
+                                const SizedBox(height: 4),
+                                Row(
+                                  children: [
+                                    Icon(
+                                      Icons.calendar_today,
+                                      size: 12,
+                                      color: colorScheme.onSurfaceVariant.withValues(alpha: 0.6),
+                                    ),
+                                    const SizedBox(width: 4),
+                                    Text(
+                                      dateStr,
+                                      style: TextStyle(
+                                        fontSize: 12,
+                                        color: colorScheme.onSurfaceVariant,
+                                      ),
+                                    ),
+                                    const SizedBox(width: 8),
+                                    Icon(
+                                      Icons.access_time,
+                                      size: 12,
+                                      color: colorScheme.onSurfaceVariant.withValues(alpha: 0.6),
+                                    ),
+                                    const SizedBox(width: 4),
+                                    Text(
+                                      timeStr,
+                                      style: TextStyle(
+                                        fontSize: 12,
+                                        color: colorScheme.onSurfaceVariant,
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                                const SizedBox(height: 4),
+                                Text(
+                                  '${session.tags.length} Tags scanned',
+                                  style: TextStyle(
+                                    fontSize: 12,
+                                    fontWeight: FontWeight.w500,
+                                    color: colorScheme.primary,
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+                          Icon(
+                            Icons.chevron_right,
+                            color: colorScheme.outline.withValues(alpha: 0.5),
+                          ),
+                        ],
                       ),
                     ),
                   ),
@@ -56,15 +197,19 @@ class _ScanSessionsListPageState extends State<ScanSessionsListPage> {
               },
             ),
       floatingActionButton: FloatingActionButton.extended(
-        icon: Icon(Icons.add),
-        label: Text("New Scan"),
-        onPressed: () {
-          Navigator.push(
+        onPressed: () async {
+          await Navigator.push(
             context,
-            MaterialPageRoute(builder: (_) => RFIDScannerPage()),
+            MaterialPageRoute(builder: (_) => const RFIDScannerPage()),
           );
-          _load(); //refresh the state kunai purano scan cha bhane
+          _load();
         },
+        icon: const Icon(Icons.add_a_photo_outlined),
+        label: const Text('Start New Scan'),
+        elevation: 2,
+        backgroundColor: colorScheme.primary,
+        foregroundColor: colorScheme.onPrimary,
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
       ),
     );
   }

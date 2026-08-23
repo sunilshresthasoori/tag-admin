@@ -18,64 +18,76 @@ class StatusCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Card(
+    final colorScheme = Theme.of(context).colorScheme;
+
+    return Container(
       margin: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: colorScheme.surfaceContainerHighest.withValues(alpha: 0.3),
+        borderRadius: BorderRadius.circular(24),
+        border: Border.all(
+          color: colorScheme.outlineVariant,
+          width: 1,
+        ),
+      ),
       child: Padding(
-        padding: const EdgeInsets.all(16),
+        padding: const EdgeInsets.all(20),
         child: Column(
           children: [
             Row(
               children: [
-                const Expanded(
-                  child: Text(
-                    'Reader Status:',
-                    style: TextStyle(
-                      fontSize: 16,
-                      fontWeight: FontWeight.bold,
-                    ),
-                  ),
+                Icon(
+                  isConnected ? Icons.bluetooth_connected : Icons.bluetooth_disabled,
+                  color: isConnected ? Colors.blue : Colors.grey,
+                  size: 28,
                 ),
+                const SizedBox(width: 16),
                 Expanded(
-                  child: Container(
-                    padding: const EdgeInsets.symmetric(
-                      horizontal: 12,
-                      vertical: 6,
-                    ),
-                    decoration: BoxDecoration(
-                      color: isConnected ? Colors.green : Colors.red,
-                      borderRadius: BorderRadius.circular(12),
-                    ),
-                    child: Text(
-                      connectionStatus,
-                      style: const TextStyle(
-                        color: Colors.white,
-                        fontWeight: FontWeight.bold,
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        'Reader Connection',
+                        style: TextStyle(
+                          fontSize: 14,
+                          fontWeight: FontWeight.w500,
+                          color: colorScheme.onSurfaceVariant,
+                        ),
                       ),
-                      textAlign: TextAlign.center,
-                    ),
+                      Text(
+                        connectionStatus,
+                        style: TextStyle(
+                          fontSize: 18,
+                          fontWeight: FontWeight.bold,
+                          color: isConnected ? Colors.green.shade700 : Colors.red.shade700,
+                        ),
+                      ),
+                    ],
                   ),
                 ),
+                if (!isConnected)
+                  IconButton.filledTonal(
+                    onPressed: onInitialize,
+                    icon: const Icon(Icons.refresh),
+                    tooltip: 'Initialize Reader',
+                  ),
               ],
             ),
-            const SizedBox(height: 16),
+            const SizedBox(height: 20),
             Row(
               children: [
                 Expanded(
-                  child: ElevatedButton.icon(
-                    onPressed: isConnected ? null : onInitialize,
-                    icon: const Icon(Icons.settings),
-                    label: const Text('Initialize'),
-                  ),
-                ),
-                const SizedBox(width: 8),
-                Expanded(
-                  child: ElevatedButton.icon(
+                  child: FilledButton.icon(
                     onPressed: isConnected ? onDisconnect : onConnect,
                     icon: Icon(isConnected ? Icons.link_off : Icons.link),
-                    label: Text(isConnected ? 'Disconnect' : 'Connect'),
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: isConnected ? Colors.red : Colors.blue,
-                      foregroundColor: Colors.white,
+                    label: Text(isConnected ? 'Disconnect' : 'Connect Reader'),
+                    style: FilledButton.styleFrom(
+                      backgroundColor: isConnected ? colorScheme.errorContainer : colorScheme.primary,
+                      foregroundColor: isConnected ? colorScheme.onErrorContainer : colorScheme.onPrimary,
+                      minimumSize: const Size.fromHeight(50),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(16),
+                      ),
                     ),
                   ),
                 ),

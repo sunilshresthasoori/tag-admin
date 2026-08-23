@@ -1,6 +1,7 @@
 import 'dart:convert';
 import 'dart:core';
 
+import 'package:flutter/foundation.dart';
 import 'package:http/http.dart' as http;
 
 import '../models/rfid_tag.dart';
@@ -18,14 +19,14 @@ class ApiService {
     };
 
     // DEBUG: Print the payload to console
-    print('--- UPLOAD DEBUG: PAYLOAD ---');
-    print(jsonEncode(requestPayload));
-    print('-----------------------------');
+    debugPrint('--- UPLOAD DEBUG: PAYLOAD ---');
+    debugPrint(jsonEncode(requestPayload));
+    debugPrint('-----------------------------');
 
     if (isOffline) {
-      print('DEBUG: Offline mode enabled. Simulating upload...');
+      debugPrint('DEBUG: Offline mode enabled. Simulating upload...');
       await Future.delayed(const Duration(seconds: 2));
-      print('DEBUG: Offline upload simulation complete.');
+      debugPrint('DEBUG: Offline upload simulation complete.');
       return;
     }
 

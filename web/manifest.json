@@ -1,6 +1,6 @@
 {
-    "name": "rfid_scanner_lane",
-    "short_name": "rfid_scanner_lane",
+    "name": "Tag Admin",
+  "short_name": "Tag Admin",
     "start_url": ".",
     "display": "standalone",
     "background_color": "#0175C2",
