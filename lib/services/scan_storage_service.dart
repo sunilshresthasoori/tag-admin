@@ -1,7 +1,8 @@
 import 'dart:convert';
 
-import 'package:rfid_scanner_lane/models/scan_sessions.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+
+import '../models/scan_sessions.dart';
 
 class ScanStorageService {
   static const _key = 'scan_sessions';

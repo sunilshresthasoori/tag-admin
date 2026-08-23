@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import 'package:rfid_scanner_lane/services/api_service.dart';
 import '../models/rfid_tag.dart';
 import '../models/scan_sessions.dart';
+import '../services/api_service.dart';
 import '../services/rfid_service.dart';
 import '../services/scan_storage_service.dart';
 import '../widgets/scan_button.dart';

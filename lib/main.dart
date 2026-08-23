@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:rfid_scanner_lane/screens/scan_sessions_list_page.dart';
 import 'screens/rfid_scanner_page.dart';
 
 void main() {

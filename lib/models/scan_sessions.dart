@@ -1,4 +1,4 @@
-import 'package:rfid_scanner_lane/models/rfid_tag.dart';
+import 'package:tag_admin/models/rfid_tag.dart';
 
 class ScanSession {
   final String id;

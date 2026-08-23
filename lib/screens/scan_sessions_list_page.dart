@@ -1,9 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
-import 'package:rfid_scanner_lane/models/scan_sessions.dart';
-import 'package:rfid_scanner_lane/screens/rfid_scanner_page.dart';
-import 'package:rfid_scanner_lane/screens/scan_details_page.dart';
+import 'package:tag_admin/screens/rfid_scanner_page.dart';
+import 'package:tag_admin/screens/scan_details_page.dart';
 
+import '../models/scan_sessions.dart';
 import '../services/scan_storage_service.dart';
 
 class ScanSessionsListPage extends StatefulWidget {
