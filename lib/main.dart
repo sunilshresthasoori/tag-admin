@@ -1,0 +1,23 @@
+import 'package:flutter/material.dart';
+import 'package:rfid_scanner_lane/screens/scan_sessions_list_page.dart';
+import 'screens/rfid_scanner_page.dart';
+
+void main() {
+  runApp(const MyApp());
+}
+
+class MyApp extends StatelessWidget {
+  const MyApp({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    return MaterialApp(
+      title: 'RFID Scanner',
+      theme: ThemeData(
+        colorScheme: ColorScheme.fromSeed(seedColor: Colors.blue),
+        useMaterial3: true,
+      ),
+      home: const RFIDScannerPage(),
+    );
+  }
+}

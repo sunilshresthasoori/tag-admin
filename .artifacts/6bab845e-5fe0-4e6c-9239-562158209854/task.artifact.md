@@ -1,0 +1,3 @@
+- `[x]` Add `serialNumber` to `RFIDTag` model
+- `[x]` Implement `fetchSerialNumber` in `ApiService`
+- `[x]` Verify changes
