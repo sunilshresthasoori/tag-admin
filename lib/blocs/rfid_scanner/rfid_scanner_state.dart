@@ -8,6 +8,9 @@ class RFIDScannerState extends Equatable {
   final bool isScanning;
   final bool isConnected;
   final bool isUploading;
+  final bool isCheckingPacket;
+  final bool? isValidPacket;
+  final String? packetNumber;
   final List<RFIDTag> scannedTags;
   final Map<String, RFIDTag> tagMap;
   final RFIDScannerStatus status;
@@ -19,6 +22,9 @@ class RFIDScannerState extends Equatable {
     this.isScanning = false,
     this.isConnected = false,
     this.isUploading = false,
+    this.isCheckingPacket = false,
+    this.isValidPacket,
+    this.packetNumber,
     this.scannedTags = const [],
     this.tagMap = const {},
     this.status = RFIDScannerStatus.initial,
@@ -26,22 +32,31 @@ class RFIDScannerState extends Equatable {
     this.successMessage,
   });
 
+  bool get isBarcodeScanned => packetNumber != null && packetNumber!.isNotEmpty;
+
   RFIDScannerState copyWith({
     String? connectionStatus,
     bool? isScanning,
     bool? isConnected,
     bool? isUploading,
+    bool? isCheckingPacket,
+    bool? isValidPacket,
+    String? packetNumber,
     List<RFIDTag>? scannedTags,
     Map<String, RFIDTag>? tagMap,
     RFIDScannerStatus? status,
     String? errorMessage,
     String? successMessage,
+    bool clearPacketNumber = false,
   }) {
     return RFIDScannerState(
       connectionStatus: connectionStatus ?? this.connectionStatus,
       isScanning: isScanning ?? this.isScanning,
       isConnected: isConnected ?? this.isConnected,
       isUploading: isUploading ?? this.isUploading,
+      isCheckingPacket: isCheckingPacket ?? this.isCheckingPacket,
+      isValidPacket: clearPacketNumber ? null : (isValidPacket ?? this.isValidPacket),
+      packetNumber: clearPacketNumber ? null : (packetNumber ?? this.packetNumber),
       scannedTags: scannedTags ?? this.scannedTags,
       tagMap: tagMap ?? this.tagMap,
       status: status ?? this.status,
@@ -56,6 +71,9 @@ class RFIDScannerState extends Equatable {
         isScanning,
         isConnected,
         isUploading,
+        isCheckingPacket,
+        isValidPacket,
+        packetNumber,
         scannedTags,
         tagMap,
         status,

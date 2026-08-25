@@ -65,6 +65,23 @@ class ScanDetailsPage extends StatelessWidget {
                           Text(timeStr, style: TextStyle(color: colorScheme.onSurfaceVariant)),
                         ],
                       ),
+                      if (session.packetNumber != null) ...[
+                        const SizedBox(height: 8),
+                        Row(
+                          children: [
+                            Icon(Icons.inventory_2_outlined, size: 14, color: colorScheme.primary),
+                            const SizedBox(width: 4),
+                            Text(
+                              'Box: ${session.packetNumber}',
+                              style: TextStyle(
+                                color: colorScheme.primary,
+                                fontWeight: FontWeight.bold,
+                                fontSize: 13,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ],
                     ],
                   ),
                 ),

@@ -25,32 +25,35 @@ class TagsList extends StatelessWidget {
 
     if (tags.isEmpty) {
       return Center(
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            Icon(
-              Icons.sensors_off,
-              size: 80,
-              color: colorScheme.outlineVariant,
-            ),
-            const SizedBox(height: 16),
-            Text(
-              'No tags scanned yet',
-              style: TextStyle(
-                fontSize: 18,
-                fontWeight: FontWeight.w500,
-                color: colorScheme.outline,
+        child: SingleChildScrollView(
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Icon(
+                Icons.sensors_off,
+                size: 64, // Slightly smaller icon
+                color: colorScheme.outlineVariant,
               ),
-            ),
-            const SizedBox(height: 8),
-            Text(
-              'Press the button above to start',
-              style: TextStyle(
-                fontSize: 14,
-                color: colorScheme.outline.withValues(alpha: 0.7),
+              const SizedBox(height: 16),
+              Text(
+                'No tags scanned yet',
+                style: TextStyle(
+                  fontSize: 16, // Slightly smaller text
+                  fontWeight: FontWeight.w500,
+                  color: colorScheme.outline,
+                ),
               ),
-            ),
-          ],
+              const SizedBox(height: 4),
+              Text(
+                'Press the button above to start',
+                style: TextStyle(
+                  fontSize: 12, // Slightly smaller text
+                  color: colorScheme.outline.withValues(alpha: 0.7),
+                ),
+              ),
+            ],
+          ),
         ),
       );
     }

@@ -1,5 +1,9 @@
 package com.example.tag_admin
 
+import android.content.BroadcastReceiver
+import android.content.Context
+import android.content.Intent
+import android.content.IntentFilter
 import android.os.AsyncTask
 import android.util.Log
 import io.flutter.embedding.android.FlutterActivity
@@ -13,12 +17,42 @@ class MainActivity : FlutterActivity(), RfidEventsListener {
     private val EVENT_CHANNEL = "rfid_scanner_events"
     private val TAG = "RFIDScanner"
 
+    // Zebra DataWedge constants
+    private val BARCODE_ACTION = "com.example.tag_admin.BARCODE_ACTION"
+    private val DATAWEDGE_DATA_STRING = "com.symbol.datawedge.data_string"
+
     private var readers: Readers? = null
     private var availableRFIDReaderList: ArrayList<ReaderDevice>? = null
     private var readerDevice: ReaderDevice? = null
     private var reader: RFIDReader? = null
     private var eventSink: EventChannel.EventSink? = null
     private var isUsingAccessSequence = false
+
+    private val barcodeReceiver = object : BroadcastReceiver() {
+        override fun onReceive(context: Context?, intent: Intent?) {
+            if (intent?.action == BARCODE_ACTION) {
+                val barcode = intent.getStringExtra(DATAWEDGE_DATA_STRING) ?: ""
+                if (barcode.isNotEmpty()) {
+                    Log.d(TAG, "Barcode received from DataWedge: $barcode")
+                    sendEvent(mapOf("barcode" to barcode))
+                }
+            }
+        }
+    }
+
+    override fun onResume() {
+        super.onResume()
+        if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.TIRAMISU) {
+            registerReceiver(barcodeReceiver, IntentFilter(BARCODE_ACTION), Context.RECEIVER_EXPORTED)
+        } else {
+            registerReceiver(barcodeReceiver, IntentFilter(BARCODE_ACTION))
+        }
+    }
+
+    override fun onPause() {
+        super.onPause()
+        unregisterReceiver(barcodeReceiver)
+    }
 
     override fun configureFlutterEngine(flutterEngine: FlutterEngine) {
         super.configureFlutterEngine(flutterEngine)

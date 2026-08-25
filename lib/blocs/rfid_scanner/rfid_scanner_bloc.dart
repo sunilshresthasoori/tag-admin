@@ -30,8 +30,10 @@ class RFIDScannerBloc extends Bloc<RFIDScannerEvent, RFIDScannerState> {
     on<StopScanning>(_onStopScanning);
     on<UploadTags>(_onUploadTags);
     on<ClearTags>(_onClearTags);
+    on<ClearBarcode>(_onClearBarcode);
     on<SaveSession>(_onSaveSession);
     on<TagReceived>(_onTagReceived);
+    on<BarcodeReceived>(_onBarcodeReceived);
     on<StatusChanged>(_onStatusChanged);
     on<ErrorOccurred>(_onErrorOccurred);
 
@@ -44,6 +46,8 @@ class RFIDScannerBloc extends Bloc<RFIDScannerEvent, RFIDScannerState> {
         if (event is Map) {
           if (event.containsKey('tag')) {
             add(TagReceived(Map<String, dynamic>.from(event['tag'])));
+          } else if (event.containsKey('barcode')) {
+            add(BarcodeReceived(event['barcode'].toString()));
           } else if (event.containsKey('status')) {
             add(StatusChanged(event['status'].toString()));
           } else if (event.containsKey('error')) {
@@ -130,15 +134,24 @@ class RFIDScannerBloc extends Bloc<RFIDScannerEvent, RFIDScannerState> {
       return;
     }
 
+    if (state.packetNumber == null) {
+      emit(state.copyWith(errorMessage: 'Packet code required for upload'));
+      return;
+    }
+
     emit(state.copyWith(isUploading: true));
 
     try {
-      await _apiService.uploadScannedTags(state.scannedTags, isOffline: false);
+      await _apiService.uploadScannedTags(
+        state.packetNumber!,
+        state.scannedTags,
+        isOffline: false,
+      );
       emit(state.copyWith(
         isUploading: false,
         scannedTags: [],
         tagMap: {},
-        successMessage: 'Successfully uploaded ${state.scannedTags.length} tags to the server!',
+        successMessage: 'Successfully uploaded ${state.scannedTags.length} tags for packet ${state.packetNumber}!',
       ));
     } catch (e) {
       emit(state.copyWith(
@@ -149,7 +162,15 @@ class RFIDScannerBloc extends Bloc<RFIDScannerEvent, RFIDScannerState> {
   }
 
   void _onClearTags(ClearTags event, Emitter<RFIDScannerState> emit) {
-    emit(state.copyWith(scannedTags: [], tagMap: {}));
+    emit(state.copyWith(
+      scannedTags: [],
+      tagMap: {},
+      clearPacketNumber: true,
+    ));
+  }
+
+  void _onClearBarcode(ClearBarcode event, Emitter<RFIDScannerState> emit) {
+    emit(state.copyWith(clearPacketNumber: true));
   }
 
   Future<void> _onSaveSession(
@@ -167,6 +188,7 @@ class RFIDScannerBloc extends Bloc<RFIDScannerEvent, RFIDScannerState> {
       id: DateTime.now().millisecondsSinceEpoch.toString(),
       scanDate: DateTime.now(),
       jobNo: event.jobNo.trim(),
+      packetNumber: state.packetNumber,
       tags: List.from(state.scannedTags),
     );
 
@@ -178,6 +200,11 @@ class RFIDScannerBloc extends Bloc<RFIDScannerEvent, RFIDScannerState> {
   }
 
   void _onTagReceived(TagReceived event, Emitter<RFIDScannerState> emit) {
+    if (!state.isBarcodeScanned) {
+      emit(state.copyWith(errorMessage: 'Please scan box barcode first'));
+      return;
+    }
+
     final tagData = event.tagData;
     final epc = tagData['epc'] ?? '';
     if (epc.isEmpty) return;
@@ -219,6 +246,16 @@ class RFIDScannerBloc extends Bloc<RFIDScannerEvent, RFIDScannerState> {
       scannedTags: updatedScannedTags,
     ));
   }
+
+  void _onBarcodeReceived(BarcodeReceived event, Emitter<RFIDScannerState> emit) {
+    emit(state.copyWith(
+      packetNumber: event.barcode,
+      successMessage: 'Box barcode scanned: ${event.barcode}',
+      isValidPacket: true,
+    ));
+  }
+
+
 
   void _onStatusChanged(StatusChanged event, Emitter<RFIDScannerState> emit) {
     bool? isScanning;

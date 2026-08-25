@@ -18,11 +18,116 @@ class RFIDScannerPage extends StatelessWidget {
   Widget build(BuildContext context) {
     return BlocProvider(
       create: (context) => RFIDScannerBloc(
-        rfidService: RFIDService(),
-        storage: ScanStorageService(),
-        apiService: ApiService(),
+        rfidService: context.read<RFIDService>(),
+        storage: context.read<ScanStorageService>(),
+        apiService: context.read<ApiService>(),
       )..add(InitializeReader()),
       child: const RFIDScannerView(),
+    );
+  }
+}
+
+class _BarcodeStatusCard extends StatelessWidget {
+  final String? packetNumber;
+  final bool isScanned;
+  final bool isChecking;
+  final bool? isValid;
+  final VoidCallback? onDelete;
+  final VoidCallback? onTap;
+
+  const _BarcodeStatusCard({
+    required this.packetNumber,
+    required this.isScanned,
+    this.isChecking = false,
+    this.isValid,
+    this.onDelete,
+    this.onTap,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final colorScheme = theme.colorScheme;
+
+    Color backgroundColor;
+    Color borderColor;
+    if (isScanned) {
+      backgroundColor = Colors.green.shade50;
+      borderColor = Colors.green.shade200;
+    } else {
+      backgroundColor = colorScheme.surfaceContainerHighest.withValues(alpha: 0.3);
+      borderColor = colorScheme.outlineVariant;
+    }
+
+    return GestureDetector(
+      onTap: !isScanned ? onTap : null,
+      child: Container(
+        margin: const EdgeInsets.fromLTRB(16, 0, 16, 16),
+        padding: const EdgeInsets.all(16),
+        decoration: BoxDecoration(
+          color: backgroundColor,
+          borderRadius: BorderRadius.circular(20),
+          border: Border.all(
+            color: borderColor,
+            width: 1,
+          ),
+        ),
+        child: Row(
+          children: [
+            Container(
+              padding: const EdgeInsets.all(10),
+              decoration: BoxDecoration(
+                color: isScanned ? Colors.green.shade100 : colorScheme.surface,
+                shape: BoxShape.circle,
+              ),
+              child: Icon(
+                isScanned ? Icons.inventory_2 : Icons.barcode_reader,
+                color: isScanned ? Colors.green.shade700 : colorScheme.primary,
+                size: 24,
+              ),
+            ),
+            const SizedBox(width: 16),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    isScanned ? 'Box Scanned' : 'Awaiting Box Scan',
+                    style: TextStyle(
+                      fontSize: 12,
+                      fontWeight: FontWeight.bold,
+                      color: isScanned ? Colors.green.shade800 : colorScheme.outline,
+                      letterSpacing: 0.5,
+                    ),
+                  ),
+                  const SizedBox(height: 2),
+                  Text(
+                    isScanned ? packetNumber! : 'Scan barcode or tap to enter',
+                    style: TextStyle(
+                      fontSize: 16,
+                      fontWeight: FontWeight.w700,
+                      color: isScanned ? Colors.black87 : colorScheme.onSurfaceVariant,
+                      fontFamily: isScanned ? 'monospace' : null,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+            if (!isScanned)
+              Icon(
+                Icons.keyboard,
+                size: 20,
+                color: colorScheme.primary.withValues(alpha: 0.5),
+              )
+            else
+              IconButton(
+                icon: Icon(Icons.delete_outline, color: Colors.red.shade400),
+                onPressed: onDelete,
+                tooltip: 'Remove barcode',
+              ),
+          ],
+        ),
+      ),
     );
   }
 }
@@ -99,6 +204,34 @@ class _RFIDScannerViewState extends State<RFIDScannerView>
           ElevatedButton(
             onPressed: () => Navigator.pop(context, controller.text),
             child: const Text('OK'),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Future<String?> _promptPacketCode(BuildContext context) {
+    final controller = TextEditingController();
+    return showDialog<String>(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('Enter Packet Code'),
+        content: TextField(
+          controller: controller,
+          autofocus: true,
+          decoration: const InputDecoration(
+            hintText: 'e.g. PKT-001',
+            labelText: 'Packet Code',
+          ),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: const Text('Cancel'),
+          ),
+          ElevatedButton(
+            onPressed: () => Navigator.pop(context, controller.text),
+            child: const Text('Confirm'),
           ),
         ],
       ),
@@ -200,6 +333,28 @@ class _RFIDScannerViewState extends State<RFIDScannerView>
           children: [
             BlocBuilder<RFIDScannerBloc, RFIDScannerState>(
               buildWhen: (p, c) =>
+                  p.packetNumber != c.packetNumber ||
+                  p.isBarcodeScanned != c.isBarcodeScanned ||
+                  p.isCheckingPacket != c.isCheckingPacket ||
+                  p.isValidPacket != c.isValidPacket,
+              builder: (context, state) {
+                return _BarcodeStatusCard(
+                  packetNumber: state.packetNumber,
+                  isScanned: state.isBarcodeScanned,
+                  isChecking: state.isCheckingPacket,
+                  isValid: state.isValidPacket,
+                  onDelete: () => bloc.add(ClearBarcode()),
+                  onTap: () async {
+                    final code = await _promptPacketCode(context);
+                    if (code != null && code.trim().isNotEmpty) {
+                      bloc.add(BarcodeReceived(code.trim()));
+                    }
+                  },
+                );
+              },
+            ),
+            BlocBuilder<RFIDScannerBloc, RFIDScannerState>(
+              buildWhen: (p, c) =>
                   p.connectionStatus != c.connectionStatus ||
                   p.isConnected != c.isConnected,
               builder: (context, state) {
@@ -214,10 +369,15 @@ class _RFIDScannerViewState extends State<RFIDScannerView>
             ),
             BlocBuilder<RFIDScannerBloc, RFIDScannerState>(
               buildWhen: (p, c) =>
-                  p.isConnected != c.isConnected || p.isScanning != c.isScanning,
+                  p.isConnected != c.isConnected ||
+                  p.isScanning != c.isScanning ||
+                  p.isBarcodeScanned != c.isBarcodeScanned ||
+                  p.isValidPacket != c.isValidPacket,
               builder: (context, state) {
                 return ScanButton(
-                  isConnected: state.isConnected,
+                  isConnected: state.isConnected && 
+                               state.isBarcodeScanned && 
+                               state.isValidPacket == true,
                   isScanning: state.isScanning,
                   onStart: () => bloc.add(StartScanning()),
                   onStop: () => bloc.add(StopScanning()),
@@ -342,3 +502,4 @@ class _RFIDScannerViewState extends State<RFIDScannerView>
     );
   }
 }
+

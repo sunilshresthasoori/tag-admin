@@ -4,11 +4,13 @@ class ScanSession {
   final String id;
   final DateTime scanDate;
   final String jobNo;
+  final String? packetNumber;
   final List<RFIDTag> tags;
 
   ScanSession({
     required this.id,
     required this.jobNo,
+    this.packetNumber,
     required this.scanDate,
     required this.tags,
   });
@@ -17,6 +19,7 @@ class ScanSession {
     'id': id,
     'scanDate': scanDate.toIso8601String(),
     'jobNo': jobNo,
+    'packetNumber': packetNumber,
     'tags': tags
         .map(
           (t) => {
@@ -35,6 +38,7 @@ class ScanSession {
     id: json['id'],
     scanDate: DateTime.parse(json['scanDate']),
     jobNo: json['jobNo'],
+    packetNumber: json['packetNumber'],
     tags: (json['tags'] as List)
         .map(
           (t) => RFIDTag(

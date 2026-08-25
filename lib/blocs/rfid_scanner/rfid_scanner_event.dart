@@ -21,6 +21,8 @@ class UploadTags extends RFIDScannerEvent {}
 
 class ClearTags extends RFIDScannerEvent {}
 
+class ClearBarcode extends RFIDScannerEvent {}
+
 class SaveSession extends RFIDScannerEvent {
   final String jobNo;
   const SaveSession(this.jobNo);
@@ -35,6 +37,22 @@ class TagReceived extends RFIDScannerEvent {
 
   @override
   List<Object?> get props => [tagData];
+}
+
+class BarcodeReceived extends RFIDScannerEvent {
+  final String barcode;
+  const BarcodeReceived(this.barcode);
+
+  @override
+  List<Object?> get props => [barcode];
+}
+
+class CheckPacket extends RFIDScannerEvent {
+  final String packetCode;
+  const CheckPacket(this.packetCode);
+
+  @override
+  List<Object?> get props => [packetCode];
 }
 
 class StatusChanged extends RFIDScannerEvent {

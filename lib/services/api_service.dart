@@ -5,16 +5,29 @@ import 'package:flutter/foundation.dart';
 import 'package:http/http.dart' as http;
 
 import '../models/rfid_tag.dart';
+import 'auth_service.dart';
 
 class ApiService {
+  final AuthService _authService = AuthService();
+  static const String baseUrl = 'https://ntag-verify.sooritechnology.com.np';
+
+  Future<Map<String, String>> _getHeaders() async {
+    final token = await _authService.getAccessToken();
+    return {
+      'Content-Type': 'application/json',
+      if (token != null) 'Authorization': 'Bearer $token',
+    };
+  }
+
   //new feature
-  Future<void> uploadScannedTags(List<RFIDTag> tags, {bool isOffline = false}) async {
+  Future<void> uploadScannedTags(String packetCode, List<RFIDTag> tags, {bool isOffline = false}) async {
     final List<Map<String, String>> tagList = tags.map((tag) => {
-      'epc_hex': tag.epc,
+      'epcHex': tag.epc,
       'tid': tag.tid,
     }).toList();
 
     final Map<String, dynamic> requestPayload = {
+      'packetCode': packetCode,
       'data': tagList,
     };
 
@@ -30,17 +43,28 @@ class ApiService {
       return;
     }
 
-    final uri = Uri.parse('http://192.168.1.71:8522/api/epc/valid-epc-tags/bulk-create');
+    final uri = Uri.parse('$baseUrl/api/v1/epc-tags-app/valid-epc-tags/bulk-create');
 
-    final response = await http.post(
+    var response = await http.post(
       uri,
-      headers: {'Content-Type': 'application/json'},
+      headers: await _getHeaders(),
       body: jsonEncode(requestPayload),
     );
+
+    if (response.statusCode == 401) {
+      debugPrint('DEBUG: 401 Unauthorized. Attempting to refresh token...');
+      final newToken = await _authService.refreshToken();
+      if (newToken != null) {
+        response = await http.post(
+          uri,
+          headers: await _getHeaders(),
+          body: jsonEncode(requestPayload),
+        );
+      }
+    }
 
     if (response.statusCode != 200 && response.statusCode != 201) {
       throw Exception('Upload failed: ${response.body}');
     }
   }
-
 }
