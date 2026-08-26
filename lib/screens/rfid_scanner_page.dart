@@ -10,6 +10,7 @@ import '../widgets/scan_button.dart';
 import '../widgets/status_card.dart';
 import '../widgets/tags_list.dart';
 import 'scan_sessions_list_page.dart';
+import 'scanning_view_page.dart';
 
 class RFIDScannerPage extends StatelessWidget {
   const RFIDScannerPage({super.key});
@@ -216,13 +217,25 @@ class _RFIDScannerViewState extends State<RFIDScannerView>
       context: context,
       builder: (context) => AlertDialog(
         title: const Text('Enter Packet Code'),
-        content: TextField(
-          controller: controller,
-          autofocus: true,
-          decoration: const InputDecoration(
-            hintText: 'e.g. PKT-001',
-            labelText: 'Packet Code',
-          ),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            TextField(
+              controller: controller,
+              autofocus: true,
+              maxLength: 8,
+              keyboardType: TextInputType.text,
+              textCapitalization: TextCapitalization.characters,
+              decoration: const InputDecoration(
+                prefixText: 'PKT',
+                hintText: '00000001',
+                labelText: 'Packet ID',
+                helperText: 'Enter the 8 characters after PKT',
+                counterText: '',
+              ),
+            ),
+          ],
         ),
         actions: [
           TextButton(
@@ -230,7 +243,12 @@ class _RFIDScannerViewState extends State<RFIDScannerView>
             child: const Text('Cancel'),
           ),
           ElevatedButton(
-            onPressed: () => Navigator.pop(context, controller.text),
+            onPressed: () {
+              final value = controller.text.trim();
+              if (value.isNotEmpty) {
+                Navigator.pop(context, 'PKT$value');
+              }
+            },
             child: const Text('Confirm'),
           ),
         ],
@@ -245,12 +263,30 @@ class _RFIDScannerViewState extends State<RFIDScannerView>
     final bloc = context.read<RFIDScannerBloc>();
 
     return BlocListener<RFIDScannerBloc, RFIDScannerState>(
+      listenWhen: (previous, current) => 
+          (previous.errorMessage != current.errorMessage && current.errorMessage != null) ||
+          (previous.successMessage != current.successMessage && current.successMessage != null) ||
+          (!previous.isScanning && current.isScanning),
       listener: (context, state) {
         if (state.errorMessage != null) {
           _showSnackBar(context, state.errorMessage!, isError: true);
         }
         if (state.successMessage != null) {
           _showSnackBar(context, state.successMessage!);
+        }
+        if (state.isScanning) {
+          // Only push if we are currently on this page to avoid duplicates
+          if (ModalRoute.of(context)?.isCurrent ?? false) {
+            Navigator.push(
+              context,
+              MaterialPageRoute(
+                builder: (_) => BlocProvider.value(
+                  value: bloc,
+                  child: const ScanningViewPage(),
+                ),
+              ),
+            );
+          }
         }
       },
       child: Scaffold(
@@ -299,8 +335,21 @@ class _RFIDScannerViewState extends State<RFIDScannerView>
                             ),
                           )
                         : IconButton.filledTonal(
-                            onPressed: () => bloc.add(UploadTags()),
-                            icon: const Icon(Icons.cloud_upload_outlined),
+                            onPressed: state.scannedTags.length != 50
+                                ? () {
+                                    _showSnackBar(
+                                      context,
+                                      state.scannedTags.length < 50
+                                          ? 'Need ${50 - state.scannedTags.length} more tags'
+                                          : 'Remove ${state.scannedTags.length - 50} tags',
+                                      isError: true,
+                                    );
+                                  }
+                                : () => bloc.add(UploadTags()),
+                            icon: Icon(
+                              Icons.cloud_upload_outlined,
+                              color: state.scannedTags.length == 50 ? null : Colors.grey,
+                            ),
                             tooltip: 'Upload',
                           ),
                     const SizedBox(width: 8),
@@ -385,98 +434,112 @@ class _RFIDScannerViewState extends State<RFIDScannerView>
               },
             ),
             Padding(
-              padding: const EdgeInsets.fromLTRB(20, 24, 20, 12),
+              padding: const EdgeInsets.fromLTRB(16, 24, 16, 12), // Reduced horizontal padding
               child: Row(
                 children: [
                   Text(
-                    'SCANNED TAGS',
+                    'TAGS', // Shortened from 'SCANNED TAGS'
                     style: TextStyle(
-                      fontSize: 12,
-                      letterSpacing: 1.2,
+                      fontSize: 11,
+                      letterSpacing: 1.0,
                       fontWeight: FontWeight.w900,
                       color: colorScheme.outline,
                     ),
                   ),
-                  const SizedBox(width: 8),
+                  const SizedBox(width: 6),
                   BlocBuilder<RFIDScannerBloc, RFIDScannerState>(
                     buildWhen: (p, c) => p.scannedTags.length != c.scannedTags.length,
                     builder: (context, state) {
                       return Container(
-                        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+                        padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
                         decoration: BoxDecoration(
-                          color: colorScheme.primaryContainer,
-                          borderRadius: BorderRadius.circular(10),
+                          color: state.scannedTags.length == 50
+                              ? Colors.green.shade600
+                              : (state.scannedTags.length > 50
+                                  ? Colors.red.shade600
+                                  : colorScheme.primaryContainer),
+                          borderRadius: BorderRadius.circular(8),
                         ),
                         child: Text(
                           state.scannedTags.length.toString(),
                           style: TextStyle(
-                            fontSize: 12,
+                            fontSize: 11,
                             fontWeight: FontWeight.bold,
-                            color: colorScheme.onPrimaryContainer,
+                            color: state.scannedTags.length >= 50
+                                ? Colors.white
+                                : colorScheme.onPrimaryContainer,
                           ),
                         ),
                       );
                     },
                   ),
                   const Spacer(),
-                  TextButton.icon(
-                    onPressed: () {
-                      Navigator.push(
-                        context,
-                        MaterialPageRoute(
-                          builder: (_) => const ScanSessionsListPage(),
-                        ),
-                      );
-                    },
-                    icon: const Icon(Icons.history, size: 18),
-                    label: const Text('History', style: TextStyle(fontSize: 12)),
-                    style: TextButton.styleFrom(
-                      padding: const EdgeInsets.symmetric(horizontal: 8),
-                      minimumSize: Size.zero,
-                      tapTargetSize: MaterialTapTargetSize.shrinkWrap,
-                    ),
-                  ),
                   BlocBuilder<RFIDScannerBloc, RFIDScannerState>(
                     buildWhen: (p, c) => p.isScanning != c.isScanning,
                     builder: (context, state) {
                       if (!state.isScanning) return const SizedBox.shrink();
-                      return FadeTransition(
-                        opacity: _pulseAnimation,
-                        child: Container(
-                          margin: const EdgeInsets.only(left: 8),
-                          padding: const EdgeInsets.symmetric(
-                            horizontal: 12,
-                            vertical: 6,
-                          ),
-                          decoration: BoxDecoration(
-                            color: Colors.green.shade50,
-                            borderRadius: BorderRadius.circular(20),
-                            border: Border.all(color: Colors.green.shade200),
-                          ),
-                          child: Row(
-                            mainAxisSize: MainAxisSize.min,
-                            children: [
-                              const SizedBox(
-                                width: 10,
-                                height: 10,
-                                child: CircularProgressIndicator(
-                                  strokeWidth: 2,
-                                  valueColor: AlwaysStoppedAnimation<Color>(Colors.green),
+                      return Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          TextButton.icon(
+                            onPressed: () {
+                              Navigator.push(
+                                context,
+                                MaterialPageRoute(
+                                  builder: (_) => BlocProvider.value(
+                                    value: bloc,
+                                    child: const ScanningViewPage(),
+                                  ),
                                 ),
-                              ),
-                              const SizedBox(width: 8),
-                              Text(
-                                'SCANNING...',
-                                style: TextStyle(
-                                  fontSize: 11,
-                                  color: Colors.green.shade800,
-                                  fontWeight: FontWeight.w900,
-                                  letterSpacing: 0.5,
-                                ),
-                              ),
-                            ],
+                              );
+                            },
+                            icon: const Icon(Icons.open_in_new, size: 16),
+                            label: const Text('RESUME', style: TextStyle(fontSize: 11, fontWeight: FontWeight.bold)),
+                            style: TextButton.styleFrom(
+                              padding: const EdgeInsets.symmetric(horizontal: 4),
+                              minimumSize: Size.zero,
+                              tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                              foregroundColor: colorScheme.primary,
+                            ),
                           ),
-                        ),
+                          const SizedBox(width: 4),
+                          FadeTransition(
+                            opacity: _pulseAnimation,
+                            child: Container(
+                              padding: const EdgeInsets.symmetric(
+                                horizontal: 8,
+                                vertical: 4,
+                              ),
+                              decoration: BoxDecoration(
+                                color: Colors.green.shade50,
+                                borderRadius: BorderRadius.circular(12),
+                                border: Border.all(color: Colors.green.shade200),
+                              ),
+                              child: Row(
+                                mainAxisSize: MainAxisSize.min,
+                                children: [
+                                  const SizedBox(
+                                    width: 8,
+                                    height: 8,
+                                    child: CircularProgressIndicator(
+                                      strokeWidth: 2,
+                                      valueColor: AlwaysStoppedAnimation<Color>(Colors.green),
+                                    ),
+                                  ),
+                                  const SizedBox(width: 4),
+                                  Text(
+                                    'LIVE',
+                                    style: TextStyle(
+                                      fontSize: 9,
+                                      color: Colors.green.shade800,
+                                      fontWeight: FontWeight.w900,
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ),
+                          ),
+                        ],
                       );
                     },
                   ),

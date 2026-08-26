@@ -21,14 +21,21 @@ class StatusCard extends StatelessWidget {
     final colorScheme = Theme.of(context).colorScheme;
 
     return Container(
-      margin: const EdgeInsets.all(16),
+      margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
       decoration: BoxDecoration(
-        color: colorScheme.surfaceContainerHighest.withValues(alpha: 0.3),
+        color: isConnected ? Colors.green.shade600 : colorScheme.surfaceContainerHighest.withValues(alpha: 0.3),
         borderRadius: BorderRadius.circular(24),
         border: Border.all(
-          color: colorScheme.outlineVariant,
-          width: 1,
+          color: isConnected ? Colors.green.shade800 : colorScheme.outlineVariant,
+          width: 2, // Slightly thicker border for emphasis
         ),
+        boxShadow: isConnected ? [
+          BoxShadow(
+            color: Colors.green.withValues(alpha: 0.2),
+            blurRadius: 10,
+            offset: const Offset(0, 4),
+          )
+        ] : null,
       ),
       child: Padding(
         padding: const EdgeInsets.all(20),
@@ -38,7 +45,7 @@ class StatusCard extends StatelessWidget {
               children: [
                 Icon(
                   isConnected ? Icons.bluetooth_connected : Icons.bluetooth_disabled,
-                  color: isConnected ? Colors.blue : Colors.grey,
+                  color: isConnected ? Colors.white : Colors.grey,
                   size: 28,
                 ),
                 const SizedBox(width: 16),
@@ -51,7 +58,7 @@ class StatusCard extends StatelessWidget {
                         style: TextStyle(
                           fontSize: 14,
                           fontWeight: FontWeight.w500,
-                          color: colorScheme.onSurfaceVariant,
+                          color: isConnected ? Colors.white.withValues(alpha: 0.9) : colorScheme.onSurfaceVariant,
                         ),
                       ),
                       Text(
@@ -59,7 +66,7 @@ class StatusCard extends StatelessWidget {
                         style: TextStyle(
                           fontSize: 18,
                           fontWeight: FontWeight.bold,
-                          color: isConnected ? Colors.green.shade700 : Colors.red.shade700,
+                          color: isConnected ? Colors.white : Colors.red.shade700,
                         ),
                       ),
                     ],
@@ -82,9 +89,10 @@ class StatusCard extends StatelessWidget {
                     icon: Icon(isConnected ? Icons.link_off : Icons.link),
                     label: Text(isConnected ? 'Disconnect' : 'Connect Reader'),
                     style: FilledButton.styleFrom(
-                      backgroundColor: isConnected ? colorScheme.errorContainer : colorScheme.primary,
-                      foregroundColor: isConnected ? colorScheme.onErrorContainer : colorScheme.onPrimary,
+                      backgroundColor: isConnected ? Colors.white.withValues(alpha: 0.2) : colorScheme.primary,
+                      foregroundColor: isConnected ? Colors.white : colorScheme.onPrimary,
                       minimumSize: const Size.fromHeight(50),
+                      side: isConnected ? const BorderSide(color: Colors.white, width: 1.5) : null,
                       shape: RoundedRectangleBorder(
                         borderRadius: BorderRadius.circular(16),
                       ),

@@ -180,23 +180,25 @@ class MainActivity : FlutterActivity(), RfidEventsListener {
 
             // --- DEBUG: LOG POWER CAPABILITIES ---
             val powerLevels = reader?.ReaderCapabilities?.transmitPowerLevelValues
+            val maxIndex = if (powerLevels != null) powerLevels.size - 1 else 30
+            
             if (powerLevels != null) {
                 Log.d(TAG, "Available Power Levels (dBm * 100): ${powerLevels.joinToString(", ")}")
-                Log.d(TAG, "Max Power Index: ${powerLevels.size - 1} (${powerLevels.last() / 100.0} dBm)")
+                Log.d(TAG, "Max Power Index: $maxIndex (${powerLevels.last() / 100.0} dBm)")
             }
 
             // Configure antenna settings
             val antennaConfig = reader?.Config?.Antennas?.getAntennaRfConfig(1)
             antennaConfig?.setrfModeTableIndex(0)
             
-            // SETTING RANGE HERE
-            val targetPowerIndex = 30
+            // SETTING RANGE HERE: Using the highest possible index (Max Range)
+            val targetPowerIndex = maxIndex
             antennaConfig?.transmitPowerIndex = targetPowerIndex
             
             reader?.Config?.Antennas?.setAntennaRfConfig(1, antennaConfig)
             
             val actualDbm = if (powerLevels != null && targetPowerIndex < powerLevels.size) powerLevels[targetPowerIndex] / 100.0 else "unknown"
-            Log.d(TAG, "Antenna configured: Index=$targetPowerIndex (Actual: $actualDbm dBm)")
+            Log.d(TAG, "===== POWER CONFIGURED: Index $targetPowerIndex ($actualDbm dBm) =====")
 
             reader?.Config?.setTriggerMode(ENUM_TRIGGER_MODE.RFID_MODE, true)
             Log.d(TAG, "Trigger mode set to RFID_MODE")

@@ -248,9 +248,23 @@ class RFIDScannerBloc extends Bloc<RFIDScannerEvent, RFIDScannerState> {
   }
 
   void _onBarcodeReceived(BarcodeReceived event, Emitter<RFIDScannerState> emit) {
+    final barcode = event.barcode.trim();
+    
+    // Validation: Starts with PKT and has exactly 9 characters after (Total 12)
+    final pktRegex = RegExp(r'^PKT[a-zA-Z0-9]{8}$');
+    
+    if (!pktRegex.hasMatch(barcode)) {
+      emit(state.copyWith(
+        errorMessage: 'Invalid Barcode: Must start with PKT followed by 8 characters (e.g., PKT00000001)',
+        isValidPacket: false,
+        clearPacketNumber: true,
+      ));
+      return;
+    }
+
     emit(state.copyWith(
-      packetNumber: event.barcode,
-      successMessage: 'Box barcode scanned: ${event.barcode}',
+      packetNumber: barcode,
+      successMessage: 'Box barcode scanned: $barcode',
       isValidPacket: true,
     ));
   }

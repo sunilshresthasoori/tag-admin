@@ -114,11 +114,11 @@ class TagsList extends StatelessWidget {
                           style: const TextStyle(
                             fontFamily: 'monospace',
                             fontWeight: FontWeight.w700,
-                            fontSize: 15,
+                            fontSize: 12, // Reduced from 15
                           ),
-                          overflow: TextOverflow.ellipsis,
+                          // Removed ellipsis to help see the full EPC
                         ),
-                        const SizedBox(height: 4),
+                        const SizedBox(height: 2),
                         Row(
                           children: [
                             if (tag.tid.isNotEmpty)
@@ -126,7 +126,7 @@ class TagsList extends StatelessWidget {
                                 child: Text(
                                   'TID: ${tag.tid}',
                                   style: TextStyle(
-                                    fontSize: 12,
+                                    fontSize: 10, // Reduced from 12
                                     color: colorScheme.onSurfaceVariant,
                                   ),
                                   overflow: TextOverflow.ellipsis,
@@ -136,7 +136,7 @@ class TagsList extends StatelessWidget {
                               Text(
                                 'TID: Reading...',
                                 style: TextStyle(
-                                  fontSize: 12,
+                                  fontSize: 10,
                                   fontStyle: FontStyle.italic,
                                   color: colorScheme.outline,
                                 ),
@@ -150,6 +150,7 @@ class TagsList extends StatelessWidget {
                   Column(
                     crossAxisAlignment: CrossAxisAlignment.end,
                     children: [
+                      /*
                       if (tag.rssi.isNotEmpty) ...[
                         Row(
                           mainAxisSize: MainAxisSize.min,
@@ -167,6 +168,7 @@ class TagsList extends StatelessWidget {
                           ],
                         ),
                       ],
+                      */
                       const Icon(Icons.chevron_right, size: 20, color: Colors.grey),
                     ],
                   ),
