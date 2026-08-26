@@ -178,7 +178,7 @@ class MainActivity : FlutterActivity(), RfidEventsListener {
                 Log.e(TAG, "Error configuring tag storage: ${e.message}")
             }
 
-            // --- DEBUG: LOG POWER CAPABILITIES ---
+            // DEBUG: LOG POWER CAPABILITIES
             val powerLevels = reader?.ReaderCapabilities?.transmitPowerLevelValues
             val maxIndex = if (powerLevels != null) powerLevels.size - 1 else 30
             
