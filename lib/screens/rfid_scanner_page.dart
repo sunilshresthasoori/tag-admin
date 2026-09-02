@@ -1,14 +1,17 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import '../blocs/auth/auth_bloc.dart';
 import '../blocs/rfid_scanner/rfid_scanner_bloc.dart';
 import '../blocs/rfid_scanner/rfid_scanner_event.dart';
 import '../blocs/rfid_scanner/rfid_scanner_state.dart';
+import '../models/rfid_tag.dart';
 import '../services/api_service.dart';
 import '../services/rfid_service.dart';
 import '../services/scan_storage_service.dart';
 import '../widgets/scan_button.dart';
 import '../widgets/status_card.dart';
 import '../widgets/tags_list.dart';
+import 'dispatch_tags_page.dart';
 import 'scan_sessions_list_page.dart';
 import 'scanning_view_page.dart';
 
@@ -56,7 +59,9 @@ class _BarcodeStatusCard extends StatelessWidget {
       backgroundColor = Colors.green.shade50;
       borderColor = Colors.green.shade200;
     } else {
-      backgroundColor = colorScheme.surfaceContainerHighest.withValues(alpha: 0.3);
+      backgroundColor = colorScheme.surfaceContainerHighest.withValues(
+        alpha: 0.3,
+      );
       borderColor = colorScheme.outlineVariant;
     }
 
@@ -68,10 +73,7 @@ class _BarcodeStatusCard extends StatelessWidget {
         decoration: BoxDecoration(
           color: backgroundColor,
           borderRadius: BorderRadius.circular(20),
-          border: Border.all(
-            color: borderColor,
-            width: 1,
-          ),
+          border: Border.all(color: borderColor, width: 1),
         ),
         child: Row(
           children: [
@@ -97,7 +99,9 @@ class _BarcodeStatusCard extends StatelessWidget {
                     style: TextStyle(
                       fontSize: 12,
                       fontWeight: FontWeight.bold,
-                      color: isScanned ? Colors.green.shade800 : colorScheme.outline,
+                      color: isScanned
+                          ? Colors.green.shade800
+                          : colorScheme.outline,
                       letterSpacing: 0.5,
                     ),
                   ),
@@ -107,7 +111,9 @@ class _BarcodeStatusCard extends StatelessWidget {
                     style: TextStyle(
                       fontSize: 16,
                       fontWeight: FontWeight.w700,
-                      color: isScanned ? Colors.black87 : colorScheme.onSurfaceVariant,
+                      color: isScanned
+                          ? Colors.black87
+                          : colorScheme.onSurfaceVariant,
                       fontFamily: isScanned ? 'monospace' : null,
                     ),
                   ),
@@ -164,7 +170,11 @@ class _RFIDScannerViewState extends State<RFIDScannerView>
     super.dispose();
   }
 
-  void _showSnackBar(BuildContext context, String message, {bool isError = false}) {
+  void _showSnackBar(
+    BuildContext context,
+    String message, {
+    bool isError = false,
+  }) {
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
         content: Row(
@@ -181,7 +191,7 @@ class _RFIDScannerViewState extends State<RFIDScannerView>
         backgroundColor: isError ? Colors.red.shade700 : Colors.green.shade700,
         behavior: SnackBarBehavior.floating,
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
-        duration: const Duration(seconds: 2),
+        duration: const Duration(seconds: 1),
       ),
     );
   }
@@ -256,6 +266,121 @@ class _RFIDScannerViewState extends State<RFIDScannerView>
     );
   }
 
+  void _showConflictDialog(
+    BuildContext context,
+    List<TIDConflict> conflicts,
+    List<InvalidEPC> invalidEpcs,
+  ) {
+    showDialog(
+      context: context,
+      barrierDismissible: false,
+      builder: (context) => AlertDialog(
+        title: Row(
+          children: [
+            Icon(Icons.warning_amber_rounded, color: Colors.red.shade700),
+            const SizedBox(width: 8),
+            const Expanded(
+              child: Text(
+                'Upload Issues Detected',
+                overflow: TextOverflow.ellipsis,
+              ),
+            ),
+          ],
+        ),
+        content: SizedBox(
+          width: double.maxFinite,
+          child: SingleChildScrollView(
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                if (conflicts.isNotEmpty) ...[
+                  Text(
+                    'TID Conflicts (${conflicts.length}):',
+                    style: const TextStyle(fontWeight: FontWeight.bold),
+                  ),
+                  const SizedBox(height: 8),
+                  ...conflicts.map(
+                    (conflict) => Padding(
+                      padding: const EdgeInsets.symmetric(vertical: 4),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            'EPC: ${conflict.epcHex}',
+                            style: const TextStyle(
+                              fontFamily: 'monospace',
+                              fontSize: 12,
+                              fontWeight: FontWeight.bold,
+                            ),
+                          ),
+                          Text(
+                            'TID: ${conflict.tid}',
+                            style: TextStyle(
+                              fontSize: 11,
+                              color: Colors.grey.shade700,
+                            ),
+                          ),
+                          const Divider(),
+                        ],
+                      ),
+                    ),
+                  ),
+                  const SizedBox(height: 16),
+                ],
+                if (invalidEpcs.isNotEmpty) ...[
+                  Text(
+                    'Invalid EPCs (${invalidEpcs.length}):',
+                    style: TextStyle(
+                      fontWeight: FontWeight.bold,
+                      color: Colors.red.shade700,
+                    ),
+                  ),
+                  const SizedBox(height: 8),
+                  ...invalidEpcs.map(
+                    (invalid) => Padding(
+                      padding: const EdgeInsets.symmetric(vertical: 4),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            'EPC: ${invalid.epcHex}',
+                            style: const TextStyle(
+                              fontFamily: 'monospace',
+                              fontSize: 12,
+                              fontWeight: FontWeight.bold,
+                            ),
+                          ),
+                          Text(
+                            'TID: ${invalid.tid}',
+                            style: TextStyle(
+                              fontSize: 11,
+                              color: Colors.grey.shade700,
+                            ),
+                          ),
+                          const Divider(),
+                        ],
+                      ),
+                    ),
+                  ),
+                ],
+              ],
+            ),
+          ),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () {
+              context.read<RFIDScannerBloc>().add(ClearConflicts());
+              Navigator.pop(context);
+            },
+            child: const Text('DISMISS'),
+          ),
+        ],
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
@@ -263,20 +388,39 @@ class _RFIDScannerViewState extends State<RFIDScannerView>
     final bloc = context.read<RFIDScannerBloc>();
 
     return BlocListener<RFIDScannerBloc, RFIDScannerState>(
-      listenWhen: (previous, current) => 
-          (previous.errorMessage != current.errorMessage && current.errorMessage != null) ||
-          (previous.successMessage != current.successMessage && current.successMessage != null) ||
+      listenWhen: (previous, current) =>
+          (previous.errorMessage != current.errorMessage &&
+              current.errorMessage != null) ||
+          (previous.successMessage != current.successMessage &&
+              current.successMessage != null) ||
+          (previous.tidConflicts != current.tidConflicts &&
+              current.tidConflicts.isNotEmpty) ||
+          (previous.invalidEpcs != current.invalidEpcs &&
+              current.invalidEpcs.isNotEmpty) ||
           (!previous.isScanning && current.isScanning),
       listener: (context, state) {
-        if (state.errorMessage != null) {
-          _showSnackBar(context, state.errorMessage!, isError: true);
+        final isCurrent = ModalRoute.of(context)?.isCurrent ?? false;
+
+        if (state.tidConflicts.isNotEmpty || state.invalidEpcs.isNotEmpty) {
+          if (isCurrent) {
+            _showConflictDialog(context, state.tidConflicts, state.invalidEpcs);
+          }
+        }
+        if (state.errorMessage != null &&
+            state.tidConflicts.isEmpty &&
+            state.invalidEpcs.isEmpty) {
+          if (isCurrent) {
+            _showSnackBar(context, state.errorMessage!, isError: true);
+          }
         }
         if (state.successMessage != null) {
-          _showSnackBar(context, state.successMessage!);
+          if (isCurrent) {
+            _showSnackBar(context, state.successMessage!);
+          }
         }
         if (state.isScanning) {
           // Only push if we are currently on this page to avoid duplicates
-          if (ModalRoute.of(context)?.isCurrent ?? false) {
+          if (isCurrent) {
             Navigator.push(
               context,
               MaterialPageRoute(
@@ -318,10 +462,57 @@ class _RFIDScannerViewState extends State<RFIDScannerView>
             },
           ),
           actions: [
+            IconButton(
+              icon: const Icon(Icons.inventory_2_outlined),
+              onPressed: () {
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(builder: (context) => const DispatchTagsPage()),
+                );
+              },
+              tooltip: 'Dispatch Tags',
+            ),
+            IconButton(
+              icon: const Icon(Icons.history),
+              onPressed: () {
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(builder: (context) => const ScanSessionsListPage()),
+                );
+              },
+              tooltip: 'Saved Sessions',
+            ),
+            IconButton(
+              icon: const Icon(Icons.logout),
+              onPressed: () {
+                showDialog(
+                  context: context,
+                  builder: (context) => AlertDialog(
+                    title: const Text('Logout'),
+                    content: const Text('Are you sure you want to logout?'),
+                    actions: [
+                      TextButton(
+                        onPressed: () => Navigator.pop(context),
+                        child: const Text('Cancel'),
+                      ),
+                      TextButton(
+                        onPressed: () {
+                          Navigator.pop(context);
+                          context.read<AuthBloc>().add(LogoutRequested());
+                        },
+                        child: const Text('Logout', style: TextStyle(color: Colors.red)),
+                      ),
+                    ],
+                  ),
+                );
+              },
+              tooltip: 'Logout',
+            ),
             BlocBuilder<RFIDScannerBloc, RFIDScannerState>(
               builder: (context, state) {
                 if (state.scannedTags.isEmpty) return const SizedBox.shrink();
                 return Row(
+                  mainAxisSize: MainAxisSize.min,
                   children: [
                     state.isUploading
                         ? const Center(
@@ -330,7 +521,9 @@ class _RFIDScannerViewState extends State<RFIDScannerView>
                               child: SizedBox(
                                 width: 20,
                                 height: 20,
-                                child: CircularProgressIndicator(strokeWidth: 2),
+                                child: CircularProgressIndicator(
+                                  strokeWidth: 2,
+                                ),
                               ),
                             ),
                           )
@@ -348,7 +541,9 @@ class _RFIDScannerViewState extends State<RFIDScannerView>
                                 : () => bloc.add(UploadTags()),
                             icon: Icon(
                               Icons.cloud_upload_outlined,
-                              color: state.scannedTags.length == 50 ? null : Colors.grey,
+                              color: state.scannedTags.length == 50
+                                  ? null
+                                  : Colors.grey,
                             ),
                             tooltip: 'Upload',
                           ),
@@ -424,9 +619,10 @@ class _RFIDScannerViewState extends State<RFIDScannerView>
                   p.isValidPacket != c.isValidPacket,
               builder: (context, state) {
                 return ScanButton(
-                  isConnected: state.isConnected && 
-                               state.isBarcodeScanned && 
-                               state.isValidPacket == true,
+                  isConnected:
+                      state.isConnected &&
+                      state.isBarcodeScanned &&
+                      state.isValidPacket == true,
                   isScanning: state.isScanning,
                   onStart: () => bloc.add(StartScanning()),
                   onStop: () => bloc.add(StopScanning()),
@@ -434,7 +630,8 @@ class _RFIDScannerViewState extends State<RFIDScannerView>
               },
             ),
             Padding(
-              padding: const EdgeInsets.fromLTRB(16, 24, 16, 12), // Reduced horizontal padding
+              padding: const EdgeInsets.fromLTRB(16, 24, 16, 12),
+              // Reduced horizontal padding
               child: Row(
                 children: [
                   Text(
@@ -448,16 +645,20 @@ class _RFIDScannerViewState extends State<RFIDScannerView>
                   ),
                   const SizedBox(width: 6),
                   BlocBuilder<RFIDScannerBloc, RFIDScannerState>(
-                    buildWhen: (p, c) => p.scannedTags.length != c.scannedTags.length,
+                    buildWhen: (p, c) =>
+                        p.scannedTags.length != c.scannedTags.length,
                     builder: (context, state) {
                       return Container(
-                        padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 6,
+                          vertical: 2,
+                        ),
                         decoration: BoxDecoration(
                           color: state.scannedTags.length == 50
                               ? Colors.green.shade600
                               : (state.scannedTags.length > 50
-                                  ? Colors.red.shade600
-                                  : colorScheme.primaryContainer),
+                                    ? Colors.red.shade600
+                                    : colorScheme.primaryContainer),
                           borderRadius: BorderRadius.circular(8),
                         ),
                         child: Text(
@@ -494,9 +695,17 @@ class _RFIDScannerViewState extends State<RFIDScannerView>
                               );
                             },
                             icon: const Icon(Icons.open_in_new, size: 16),
-                            label: const Text('RESUME', style: TextStyle(fontSize: 11, fontWeight: FontWeight.bold)),
+                            label: const Text(
+                              'RESUME',
+                              style: TextStyle(
+                                fontSize: 11,
+                                fontWeight: FontWeight.bold,
+                              ),
+                            ),
                             style: TextButton.styleFrom(
-                              padding: const EdgeInsets.symmetric(horizontal: 4),
+                              padding: const EdgeInsets.symmetric(
+                                horizontal: 4,
+                              ),
                               minimumSize: Size.zero,
                               tapTargetSize: MaterialTapTargetSize.shrinkWrap,
                               foregroundColor: colorScheme.primary,
@@ -513,7 +722,9 @@ class _RFIDScannerViewState extends State<RFIDScannerView>
                               decoration: BoxDecoration(
                                 color: Colors.green.shade50,
                                 borderRadius: BorderRadius.circular(12),
-                                border: Border.all(color: Colors.green.shade200),
+                                border: Border.all(
+                                  color: Colors.green.shade200,
+                                ),
                               ),
                               child: Row(
                                 mainAxisSize: MainAxisSize.min,
@@ -523,7 +734,9 @@ class _RFIDScannerViewState extends State<RFIDScannerView>
                                     height: 8,
                                     child: CircularProgressIndicator(
                                       strokeWidth: 2,
-                                      valueColor: AlwaysStoppedAnimation<Color>(Colors.green),
+                                      valueColor: AlwaysStoppedAnimation<Color>(
+                                        Colors.green,
+                                      ),
                                     ),
                                   ),
                                   const SizedBox(width: 4),
@@ -565,4 +778,3 @@ class _RFIDScannerViewState extends State<RFIDScannerView>
     );
   }
 }
-

@@ -12,7 +12,6 @@ class LoginPage extends StatefulWidget {
 class _LoginPageState extends State<LoginPage> {
   final _usernameController = TextEditingController(text: 'admin@admin.com');
   final _passwordController = TextEditingController(text: 'Cool@123.com');
-
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
@@ -93,7 +92,9 @@ class _LoginPageState extends State<LoginPage> {
                       shape: RoundedRectangleBorder(
                         borderRadius: BorderRadius.circular(28),
                         side: BorderSide(
-                          color: colorScheme.outlineVariant.withValues(alpha: 0.5),
+                          color: colorScheme.outlineVariant.withValues(
+                            alpha: 0.5,
+                          ),
                         ),
                       ),
                       child: Padding(
@@ -133,15 +134,16 @@ class _LoginPageState extends State<LoginPage> {
                                   width: double.infinity,
                                   height: 56,
                                   child: ElevatedButton(
-                                    onPressed: state.status == AuthStatus.loading
+                                    onPressed:
+                                        state.status == AuthStatus.loading
                                         ? null
                                         : () {
                                             context.read<AuthBloc>().add(
-                                                  LoginRequested(
-                                                    _usernameController.text,
-                                                    _passwordController.text,
-                                                  ),
-                                                );
+                                              LoginRequested(
+                                                _usernameController.text,
+                                                _passwordController.text,
+                                              ),
+                                            );
                                           },
                                     style: ElevatedButton.styleFrom(
                                       backgroundColor: colorScheme.primary,
@@ -157,7 +159,10 @@ class _LoginPageState extends State<LoginPage> {
                                             width: 24,
                                             child: CircularProgressIndicator(
                                               strokeWidth: 3,
-                                              valueColor: AlwaysStoppedAnimation(Colors.white),
+                                              valueColor:
+                                                  AlwaysStoppedAnimation(
+                                                    Colors.white,
+                                                  ),
                                             ),
                                           )
                                         : const Text(

@@ -16,20 +16,25 @@ class ScanStorageService {
     final sessions = decoded.map((e) => ScanSession.fromJson(e)).toList();
     sessions.sort((a, b) => b.scanDate.compareTo(a.scanDate));
     return sessions;
-
   }
 
-  Future<void> saveSession(ScanSession session) async{
+  Future<void> saveSession(ScanSession session) async {
     final prefs = await SharedPreferences.getInstance();
     final sessions = await getAllSessions();
     sessions.add(session);
-    await prefs.setString(_key, jsonEncode(sessions.map((s)=> s.toJson()).toList()));
+    await prefs.setString(
+      _key,
+      jsonEncode(sessions.map((s) => s.toJson()).toList()),
+    );
   }
 
-  Future<void> deleteSession(String id) async{
+  Future<void> deleteSession(String id) async {
     final prefs = await SharedPreferences.getInstance();
     final sessions = await getAllSessions();
-    sessions.removeWhere((s)=>s.id == id);
-    await prefs.setString(_key, jsonEncode(sessions.map((s)=> s.toJson()).toList()));
+    sessions.removeWhere((s) => s.id == id);
+    await prefs.setString(
+      _key,
+      jsonEncode(sessions.map((s) => s.toJson()).toList()),
+    );
   }
 }

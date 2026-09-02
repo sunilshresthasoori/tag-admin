@@ -27,7 +27,8 @@ class MyApp extends StatelessWidget {
       child: MultiBlocProvider(
         providers: [
           BlocProvider(
-            create: (context) => AuthBloc(context.read<AuthService>())..add(CheckAuthStatus()),
+            create: (context) =>
+                AuthBloc(context.read<AuthService>())..add(CheckAuthStatus()),
           ),
         ],
         child: MaterialApp(
@@ -42,7 +43,8 @@ class MyApp extends StatelessWidget {
               if (state.status == AuthStatus.authenticated) {
                 return const RFIDScannerPage();
               }
-              if (state.status == AuthStatus.loading || state.status == AuthStatus.initial) {
+              if (state.status == AuthStatus.loading ||
+                  state.status == AuthStatus.initial) {
                 return const Scaffold(
                   body: Center(child: CircularProgressIndicator()),
                 );

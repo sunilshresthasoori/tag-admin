@@ -56,20 +56,42 @@ class ScanDetailsPage extends StatelessWidget {
                       const SizedBox(height: 8),
                       Row(
                         children: [
-                          Icon(Icons.calendar_today, size: 14, color: colorScheme.onSurfaceVariant),
+                          Icon(
+                            Icons.calendar_today,
+                            size: 14,
+                            color: colorScheme.onSurfaceVariant,
+                          ),
                           const SizedBox(width: 4),
-                          Text(dateStr, style: TextStyle(color: colorScheme.onSurfaceVariant)),
+                          Text(
+                            dateStr,
+                            style: TextStyle(
+                              color: colorScheme.onSurfaceVariant,
+                            ),
+                          ),
                           const SizedBox(width: 12),
-                          Icon(Icons.access_time, size: 14, color: colorScheme.onSurfaceVariant),
+                          Icon(
+                            Icons.access_time,
+                            size: 14,
+                            color: colorScheme.onSurfaceVariant,
+                          ),
                           const SizedBox(width: 4),
-                          Text(timeStr, style: TextStyle(color: colorScheme.onSurfaceVariant)),
+                          Text(
+                            timeStr,
+                            style: TextStyle(
+                              color: colorScheme.onSurfaceVariant,
+                            ),
+                          ),
                         ],
                       ),
                       if (session.packetNumber != null) ...[
                         const SizedBox(height: 8),
                         Row(
                           children: [
-                            Icon(Icons.inventory_2_outlined, size: 14, color: colorScheme.primary),
+                            Icon(
+                              Icons.inventory_2_outlined,
+                              size: 14,
+                              color: colorScheme.primary,
+                            ),
                             const SizedBox(width: 4),
                             Text(
                               'Box: ${session.packetNumber}',
@@ -86,7 +108,10 @@ class ScanDetailsPage extends StatelessWidget {
                   ),
                 ),
                 Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 16,
+                    vertical: 8,
+                  ),
                   decoration: BoxDecoration(
                     color: colorScheme.primary,
                     borderRadius: BorderRadius.circular(12),
@@ -144,7 +169,9 @@ class ScanDetailsPage extends StatelessWidget {
                   decoration: BoxDecoration(
                     color: colorScheme.surface,
                     borderRadius: BorderRadius.circular(16),
-                    border: Border.all(color: colorScheme.outlineVariant.withValues(alpha: 0.5)),
+                    border: Border.all(
+                      color: colorScheme.outlineVariant.withValues(alpha: 0.5),
+                    ),
                     boxShadow: [
                       BoxShadow(
                         color: Colors.black.withValues(alpha: 0.03),
@@ -161,7 +188,9 @@ class ScanDetailsPage extends StatelessWidget {
                           width: 40,
                           height: 40,
                           decoration: BoxDecoration(
-                            color: colorScheme.secondaryContainer.withValues(alpha: 0.5),
+                            color: colorScheme.secondaryContainer.withValues(
+                              alpha: 0.5,
+                            ),
                             shape: BoxShape.circle,
                           ),
                           child: Center(
@@ -202,7 +231,10 @@ class ScanDetailsPage extends StatelessWidget {
                         ),
                         if (tag.count > 1)
                           Container(
-                            padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                            padding: const EdgeInsets.symmetric(
+                              horizontal: 8,
+                              vertical: 4,
+                            ),
                             decoration: BoxDecoration(
                               color: colorScheme.tertiaryContainer,
                               borderRadius: BorderRadius.circular(8),

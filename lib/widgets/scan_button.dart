@@ -18,7 +18,8 @@ class ScanButton extends StatefulWidget {
   State<ScanButton> createState() => _ScanButtonState();
 }
 
-class _ScanButtonState extends State<ScanButton> with SingleTickerProviderStateMixin {
+class _ScanButtonState extends State<ScanButton>
+    with SingleTickerProviderStateMixin {
   late AnimationController _controller;
   late Animation<double> _scaleAnimation;
 
@@ -70,7 +71,9 @@ class _ScanButtonState extends State<ScanButton> with SingleTickerProviderStateM
           width: double.infinity,
           height: 64,
           child: FilledButton.icon(
-            onPressed: !widget.isConnected ? null : (widget.isScanning ? widget.onStop : widget.onStart),
+            onPressed: !widget.isConnected
+                ? null
+                : (widget.isScanning ? widget.onStop : widget.onStart),
             icon: Icon(
               widget.isScanning ? Icons.stop_circle : Icons.sensors,
               size: 28,
@@ -84,7 +87,9 @@ class _ScanButtonState extends State<ScanButton> with SingleTickerProviderStateM
               ),
             ),
             style: FilledButton.styleFrom(
-              backgroundColor: widget.isScanning ? Colors.orange.shade800 : colorScheme.primary,
+              backgroundColor: widget.isScanning
+                  ? Colors.orange.shade800
+                  : colorScheme.primary,
               foregroundColor: Colors.white,
               elevation: widget.isScanning ? 8 : 2,
               shape: RoundedRectangleBorder(

@@ -13,6 +13,9 @@ class RFIDScannerState extends Equatable {
   final String? packetNumber;
   final List<RFIDTag> scannedTags;
   final Map<String, RFIDTag> tagMap;
+  final List<TIDConflict> tidConflicts;
+  final List<InvalidEPC> invalidEpcs;
+  final List<SkippedTag> skippedTags;
   final RFIDScannerStatus status;
   final String? errorMessage;
   final String? successMessage;
@@ -27,6 +30,9 @@ class RFIDScannerState extends Equatable {
     this.packetNumber,
     this.scannedTags = const [],
     this.tagMap = const {},
+    this.tidConflicts = const [],
+    this.invalidEpcs = const [],
+    this.skippedTags = const [],
     this.status = RFIDScannerStatus.initial,
     this.errorMessage,
     this.successMessage,
@@ -44,10 +50,14 @@ class RFIDScannerState extends Equatable {
     String? packetNumber,
     List<RFIDTag>? scannedTags,
     Map<String, RFIDTag>? tagMap,
+    List<TIDConflict>? tidConflicts,
+    List<InvalidEPC>? invalidEpcs,
+    List<SkippedTag>? skippedTags,
     RFIDScannerStatus? status,
     String? errorMessage,
     String? successMessage,
     bool clearPacketNumber = false,
+    bool clearConflicts = false,
   }) {
     return RFIDScannerState(
       connectionStatus: connectionStatus ?? this.connectionStatus,
@@ -55,29 +65,40 @@ class RFIDScannerState extends Equatable {
       isConnected: isConnected ?? this.isConnected,
       isUploading: isUploading ?? this.isUploading,
       isCheckingPacket: isCheckingPacket ?? this.isCheckingPacket,
-      isValidPacket: clearPacketNumber ? null : (isValidPacket ?? this.isValidPacket),
-      packetNumber: clearPacketNumber ? null : (packetNumber ?? this.packetNumber),
+      isValidPacket: clearPacketNumber
+          ? null
+          : (isValidPacket ?? this.isValidPacket),
+      packetNumber: clearPacketNumber
+          ? null
+          : (packetNumber ?? this.packetNumber),
       scannedTags: scannedTags ?? this.scannedTags,
       tagMap: tagMap ?? this.tagMap,
+      tidConflicts: clearConflicts ? [] : (tidConflicts ?? this.tidConflicts),
+      invalidEpcs: clearConflicts ? [] : (invalidEpcs ?? this.invalidEpcs),
+      skippedTags: clearConflicts ? [] : (skippedTags ?? this.skippedTags),
       status: status ?? this.status,
-      errorMessage: errorMessage, // Reset error if not provided
+      errorMessage: errorMessage,
+      // Reset error if not provided
       successMessage: successMessage, // Reset success if not provided
     );
   }
 
   @override
   List<Object?> get props => [
-        connectionStatus,
-        isScanning,
-        isConnected,
-        isUploading,
-        isCheckingPacket,
-        isValidPacket,
-        packetNumber,
-        scannedTags,
-        tagMap,
-        status,
-        errorMessage,
-        successMessage,
-      ];
+    connectionStatus,
+    isScanning,
+    isConnected,
+    isUploading,
+    isCheckingPacket,
+    isValidPacket,
+    packetNumber,
+    scannedTags,
+    tagMap,
+    tidConflicts,
+    invalidEpcs,
+    skippedTags,
+    status,
+    errorMessage,
+    successMessage,
+  ];
 }

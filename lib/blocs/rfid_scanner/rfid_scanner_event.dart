@@ -23,8 +23,11 @@ class ClearTags extends RFIDScannerEvent {}
 
 class ClearBarcode extends RFIDScannerEvent {}
 
+class ClearConflicts extends RFIDScannerEvent {}
+
 class SaveSession extends RFIDScannerEvent {
   final String jobNo;
+
   const SaveSession(this.jobNo);
 
   @override
@@ -33,6 +36,7 @@ class SaveSession extends RFIDScannerEvent {
 
 class TagReceived extends RFIDScannerEvent {
   final Map<String, dynamic> tagData;
+
   const TagReceived(this.tagData);
 
   @override
@@ -41,6 +45,7 @@ class TagReceived extends RFIDScannerEvent {
 
 class BarcodeReceived extends RFIDScannerEvent {
   final String barcode;
+
   const BarcodeReceived(this.barcode);
 
   @override
@@ -49,6 +54,7 @@ class BarcodeReceived extends RFIDScannerEvent {
 
 class CheckPacket extends RFIDScannerEvent {
   final String packetCode;
+
   const CheckPacket(this.packetCode);
 
   @override
@@ -57,6 +63,7 @@ class CheckPacket extends RFIDScannerEvent {
 
 class StatusChanged extends RFIDScannerEvent {
   final String status;
+
   const StatusChanged(this.status);
 
   @override
@@ -65,6 +72,7 @@ class StatusChanged extends RFIDScannerEvent {
 
 class ErrorOccurred extends RFIDScannerEvent {
   final String error;
+
   const ErrorOccurred(this.error);
 
   @override

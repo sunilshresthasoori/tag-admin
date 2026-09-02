@@ -5,11 +5,7 @@ class TagsList extends StatelessWidget {
   final List<RFIDTag> tags;
   final Function(RFIDTag) onTagTap;
 
-  const TagsList({
-    super.key,
-    required this.tags,
-    required this.onTagTap,
-  });
+  const TagsList({super.key, required this.tags, required this.onTagTap});
 
   Color _getRssiColor(String rssiStr) {
     if (rssiStr.isEmpty) return Colors.grey;
@@ -73,7 +69,9 @@ class TagsList extends StatelessWidget {
             decoration: BoxDecoration(
               color: colorScheme.surface,
               borderRadius: BorderRadius.circular(16),
-              border: Border.all(color: colorScheme.outlineVariant.withValues(alpha: 0.5)),
+              border: Border.all(
+                color: colorScheme.outlineVariant.withValues(alpha: 0.5),
+              ),
               boxShadow: [
                 BoxShadow(
                   color: Colors.black.withValues(alpha: 0.03),
@@ -90,7 +88,9 @@ class TagsList extends StatelessWidget {
                     width: 48,
                     height: 48,
                     decoration: BoxDecoration(
-                      color: colorScheme.primaryContainer.withValues(alpha: 0.4),
+                      color: colorScheme.primaryContainer.withValues(
+                        alpha: 0.4,
+                      ),
                       shape: BoxShape.circle,
                     ),
                     child: Center(
@@ -109,14 +109,25 @@ class TagsList extends StatelessWidget {
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        Text(
-                          tag.epc,
-                          style: const TextStyle(
-                            fontFamily: 'monospace',
-                            fontWeight: FontWeight.w700,
-                            fontSize: 12, // Reduced from 15
-                          ),
-                          // Removed ellipsis to help see the full EPC
+                        Row(
+                          children: [
+                            Text(
+                              tag.epc,
+                              style: const TextStyle(
+                                fontFamily: 'monospace',
+                                fontWeight: FontWeight.w700,
+                                fontSize: 12,
+                              ),
+                            ),
+                            if (tag.epcCollision) ...[
+                              const SizedBox(width: 6),
+                              Icon(
+                                Icons.warning_amber_rounded,
+                                size: 16,
+                                color: Colors.orange.shade800,
+                              ),
+                            ],
+                          ],
                         ),
                         const SizedBox(height: 2),
                         Row(
@@ -169,7 +180,11 @@ class TagsList extends StatelessWidget {
                         ),
                       ],
                       */
-                      const Icon(Icons.chevron_right, size: 20, color: Colors.grey),
+                      const Icon(
+                        Icons.chevron_right,
+                        size: 20,
+                        color: Colors.grey,
+                      ),
                     ],
                   ),
                 ],
@@ -181,4 +196,3 @@ class TagsList extends StatelessWidget {
     );
   }
 }
-

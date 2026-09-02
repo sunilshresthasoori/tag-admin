@@ -27,6 +27,7 @@ class MainActivity : FlutterActivity(), RfidEventsListener {
     private var reader: RFIDReader? = null
     private var eventSink: EventChannel.EventSink? = null
     private var isUsingAccessSequence = false
+    private var isReceiverRegistered = false
 
     private val barcodeReceiver = object : BroadcastReceiver() {
         override fun onReceive(context: Context?, intent: Intent?) {
@@ -42,16 +43,25 @@ class MainActivity : FlutterActivity(), RfidEventsListener {
 
     override fun onResume() {
         super.onResume()
-        if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.TIRAMISU) {
-            registerReceiver(barcodeReceiver, IntentFilter(BARCODE_ACTION), Context.RECEIVER_EXPORTED)
-        } else {
-            registerReceiver(barcodeReceiver, IntentFilter(BARCODE_ACTION))
+        if (!isReceiverRegistered) {
+            Log.d(TAG, "Registering barcode receiver")
+            val filter = IntentFilter(BARCODE_ACTION)
+            if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.TIRAMISU) {
+                registerReceiver(barcodeReceiver, filter, Context.RECEIVER_EXPORTED)
+            } else {
+                registerReceiver(barcodeReceiver, filter)
+            }
+            isReceiverRegistered = true
         }
     }
 
     override fun onPause() {
         super.onPause()
-        unregisterReceiver(barcodeReceiver)
+        if (isReceiverRegistered) {
+            Log.d(TAG, "Unregistering barcode receiver")
+            unregisterReceiver(barcodeReceiver)
+            isReceiverRegistered = false
+        }
     }
 
     override fun configureFlutterEngine(flutterEngine: FlutterEngine) {
@@ -87,10 +97,12 @@ class MainActivity : FlutterActivity(), RfidEventsListener {
         EventChannel(flutterEngine.dartExecutor.binaryMessenger, EVENT_CHANNEL).setStreamHandler(
             object : EventChannel.StreamHandler {
                 override fun onListen(arguments: Any?, events: EventChannel.EventSink?) {
+                    Log.d(TAG, "EventChannel: Flutter is listening")
                     eventSink = events
                 }
 
                 override fun onCancel(arguments: Any?) {
+                    Log.d(TAG, "EventChannel: Flutter cancelled listener")
                     eventSink = null
                 }
             }
@@ -191,8 +203,8 @@ class MainActivity : FlutterActivity(), RfidEventsListener {
             val antennaConfig = reader?.Config?.Antennas?.getAntennaRfConfig(1)
             antennaConfig?.setrfModeTableIndex(0)
             
-            // SETTING RANGE HERE: Using the highest possible index (Max Range)
-            val targetPowerIndex = maxIndex
+            // SETTING RANGE HERE: Reducing power index by 30 units (~3dBm reduction) from maximum
+            val targetPowerIndex = if (maxIndex > 30) maxIndex - 30 else 0
             antennaConfig?.transmitPowerIndex = targetPowerIndex
             
             reader?.Config?.Antennas?.setAntennaRfConfig(1, antennaConfig)
@@ -361,6 +373,7 @@ class MainActivity : FlutterActivity(), RfidEventsListener {
     // Map to store tag data temporarily as we receive TID and User memory separately
     private val tagDataMap = mutableMapOf<String, MutableMap<String, String>>()
     private val tagReadCount = mutableMapOf<String, Int>() // Track how many reads completed per tag
+    private val epcToTids = mutableMapOf<String, MutableSet<String>>() // Track distinct TIDs for each EPC
 
     private fun processTag(tagData: TagData) {
         try {
@@ -416,6 +429,23 @@ class MainActivity : FlutterActivity(), RfidEventsListener {
             // Only send data to Flutter when both TID and User memory have been read (2 operations complete)
             val readsCompleted = tagReadCount[epc] ?: 0
             if (readsCompleted >= 2) {
+                val tid = tagDataMap[epc]!!["tid"] ?: ""
+                
+                // Track TID for this EPC to detect collisions
+                if (tid.isNotEmpty()) {
+                    if (!epcToTids.containsKey(epc)) {
+                        epcToTids[epc] = mutableSetOf()
+                    }
+                    epcToTids[epc]!!.add(tid)
+                }
+
+                val tidsForEpc = epcToTids[epc]
+                val isCollision = tidsForEpc != null && tidsForEpc.size > 1
+                
+                // Add collision flag and unique key
+                tagDataMap[epc]!!["epcCollision"] = isCollision.toString()
+                tagDataMap[epc]!!["uniqueKey"] = "${epc}_$tid"
+
                 val tagInfo = tagDataMap[epc]!!.toMap()
 
                 Log.d(TAG, "╔════════════════════════════════")
@@ -454,6 +484,7 @@ class MainActivity : FlutterActivity(), RfidEventsListener {
                     // Clear the tag data map and read counts when inventory stops
                     tagDataMap.clear()
                     tagReadCount.clear()
+                    epcToTids.clear()
                     "Inventory stopped"
                 }
                 STATUS_EVENT_TYPE.HANDHELD_TRIGGER_EVENT -> {
@@ -494,7 +525,11 @@ class MainActivity : FlutterActivity(), RfidEventsListener {
 
     private fun sendEvent(data: Map<String, Any>) {
         runOnUiThread {
-            eventSink?.success(data)
+            if (eventSink != null) {
+                eventSink?.success(data)
+            } else {
+                Log.w(TAG, "Cannot send event, eventSink is NULL. Data: $data")
+            }
         }
     }
 

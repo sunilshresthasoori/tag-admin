@@ -29,6 +29,8 @@ class ScanSession {
             'rssi': t.rssi,
             'antenna': t.antenna,
             'count': t.count,
+            'uniqueKey': t.uniqueKey,
+            'epcCollision': t.epcCollision,
           },
         )
         .toList(),
@@ -48,6 +50,8 @@ class ScanSession {
             rssi: t['rssi'],
             antenna: t['antenna'],
             count: t['count'] ?? 1,
+            uniqueKey: t['uniqueKey'],
+            epcCollision: t['epcCollision'] ?? false,
           ),
         )
         .toList(),

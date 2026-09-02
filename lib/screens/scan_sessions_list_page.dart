@@ -84,7 +84,9 @@ class _ScanSessionsListPageState extends State<ScanSessionsListPage> {
               separatorBuilder: (context, index) => const SizedBox(height: 12),
               itemBuilder: (context, index) {
                 final session = _sessions[index];
-                final dateStr = DateFormat('MMM dd, yyyy').format(session.scanDate);
+                final dateStr = DateFormat(
+                  'MMM dd, yyyy',
+                ).format(session.scanDate);
                 final timeStr = DateFormat('hh:mm a').format(session.scanDate);
 
                 return InkWell(
@@ -103,7 +105,9 @@ class _ScanSessionsListPageState extends State<ScanSessionsListPage> {
                       color: colorScheme.surface,
                       borderRadius: BorderRadius.circular(16),
                       border: Border.all(
-                        color: colorScheme.outlineVariant.withValues(alpha: 0.5),
+                        color: colorScheme.outlineVariant.withValues(
+                          alpha: 0.5,
+                        ),
                       ),
                       boxShadow: [
                         BoxShadow(
@@ -121,7 +125,9 @@ class _ScanSessionsListPageState extends State<ScanSessionsListPage> {
                             width: 52,
                             height: 52,
                             decoration: BoxDecoration(
-                              color: colorScheme.primaryContainer.withValues(alpha: 0.4),
+                              color: colorScheme.primaryContainer.withValues(
+                                alpha: 0.4,
+                              ),
                               borderRadius: BorderRadius.circular(12),
                             ),
                             child: Icon(
@@ -135,7 +141,9 @@ class _ScanSessionsListPageState extends State<ScanSessionsListPage> {
                               crossAxisAlignment: CrossAxisAlignment.start,
                               children: [
                                 Text(
-                                  session.jobNo.isEmpty ? 'Untitled Job' : session.jobNo,
+                                  session.jobNo.isEmpty
+                                      ? 'Untitled Job'
+                                      : session.jobNo,
                                   style: const TextStyle(
                                     fontWeight: FontWeight.bold,
                                     fontSize: 16,
@@ -147,7 +155,8 @@ class _ScanSessionsListPageState extends State<ScanSessionsListPage> {
                                     Icon(
                                       Icons.calendar_today,
                                       size: 12,
-                                      color: colorScheme.onSurfaceVariant.withValues(alpha: 0.6),
+                                      color: colorScheme.onSurfaceVariant
+                                          .withValues(alpha: 0.6),
                                     ),
                                     const SizedBox(width: 4),
                                     Text(
@@ -161,7 +170,8 @@ class _ScanSessionsListPageState extends State<ScanSessionsListPage> {
                                     Icon(
                                       Icons.access_time,
                                       size: 12,
-                                      color: colorScheme.onSurfaceVariant.withValues(alpha: 0.6),
+                                      color: colorScheme.onSurfaceVariant
+                                          .withValues(alpha: 0.6),
                                     ),
                                     const SizedBox(width: 4),
                                     Text(
